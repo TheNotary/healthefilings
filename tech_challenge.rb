@@ -16,11 +16,11 @@ module StringCorrector
   def ensure_string_is_solvable!(string)
     character_validation_pattern = /^[a-z]+$/
     if string.length < 1
-      raise "ERROR: the string is less than or equal to 1 character"
+      raise InvalidInputs, "The input string is less than or equal to 1 character.  Input: #{string}"
     elsif string.length > 100_000 # 10**5
-      raise "ERROR: the string is too large"
+      raise InvalidInputs, "The input string is too large.  Input: #{string}"
     elsif (string =~ character_validation_pattern).nil?
-      raise "ERROR: the string contained characters other than those [a-z]"
+      raise InvalidInputs, "The input string contained characters other than those [a-z].  Input: #{string}"
     end
   end
 
@@ -35,9 +35,10 @@ module StringCorrector
   #
   # when given a string of "aaabbccx".
   def construct_frequency_analysis_array(string)
-    string.split("").each_with_object(Hash.new(0)) do |letter, hash|
-      hash[letter] += 1 # increment frequency count for this letter
-    end.map {|h| LetterOfS.new(h) }
+    string.split("").each_with_object(Hash.new(nil)) do |character, hash|
+      hash[character] ||= LetterOfS.new(character, 0)
+      hash[character].increment # increment frequency count for this character
+    end.values
   end
 
   # Returns the count of characters that need to be removed from the string
@@ -105,13 +106,20 @@ end
 
 # This simple class is for working with Letters in strings to make them valid
 # (S) strings.
+# Example usage:  LetterOfS.new("a", 3) OR LetterOfS.new(["a", 3])
 class LetterOfS
   attr_reader :char, :count
 
-  def initialize(k_v)
-    @char, @count = k_v
+  def initialize(*args)
+    @char, @count = args
+  end
+
+  def increment
+    @count += 1
   end
 end
+
+class InvalidInputs < RuntimeError; end
 
 
 
@@ -151,8 +159,8 @@ end
 
 
 # gets the first line from stdin
-watsons_string = ARGF.read.lines.first.chomp
-
-ben = ContractorToSherlock.new
-
-puts ben.check_string_for_sherlock(watsons_string)
+# watsons_string = ARGF.read.lines.first.chomp
+#
+# ben = ContractorToSherlock.new
+#
+# puts ben.check_string_for_sherlock(watsons_string)
