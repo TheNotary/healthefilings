@@ -6,19 +6,6 @@
 # codebase)
 module StringCorrector
 
-  def correct_string(string)
-    raise "Not Implemented!"
-  end
-
-  # Ignore me, I'm some of Sherlock's code
-  # the string is valid if all letters have the same frequency count, i.e.
-  # there is 1 frequency throughout the letter/ frequency hash
-  def string_valid?(character_by_frequency_hash)
-    # character_by_frequency_hash.values.uniq == 1
-    raise "Not Implemented!"
-  end
-
-
   # Raises an exception if the string does not meet the minimum criteria to be
   # solved, e.g.
   #   - if the string is less than or equal to 1 character, or
@@ -50,62 +37,73 @@ module StringCorrector
     smart_reduction_count_process(string)
   end
 
-  def reduction_by_greatest_frequenters(string)
-    character_by_frequency_hash = construct_frequency_analysis_hash(string)
-
-    most_infrequent_letter_count = character_by_frequency_hash.values.sort.uniq.first
-
-    character_by_frequency_hash.inject(0) do |total_removals_required, k_v|
-      letter, count = k_v
-
-      if count > most_infrequent_letter_count
-        total_removals_required += (count - most_infrequent_letter_count)
-      else
-        total_removals_required
-      end
-    end
-  end
-
-  def reduction_by_least_frequenters(string)
-  end
-
-  # "aaaaabbbbckk"
-  # "aabbccddxyz"
+  # Terminology:
+  #
+  # Given the string "aabbccddx", there exists 1 *flake* (it's 'x').
+  # A flake is a character that is easier to completely remove than it is to
+  # decrement the occurences of all other characters more frequent than said flake
+  # (it flakes off easily).
+  #
+  # Given the string "aabbccddx", if the letter 'a' were chosen to be the
+  # *match_target*, letters b, c, and d would not need to be decremented at all
+  # because they already match the frequency of letter 'a'.  However the number
+  # of occurences of 'x' would need to be removed to completely eliminate
+  # it from the string.  That is to say that if 'a' were selected as a
+  # match_target only one removal step would be required to eliminate the flake
+  # 'x'.
+  #
+  # smart_reduction_count_process will accept a string, say "aaabbccddx" and
+  # return the integer 2 as that the optimal number of steps required to make
+  # the string valid are 2; *one* step to remove an 'a' such that the letter 'a'
+  # is as frequent as the match_target of b (c, or d could also be chosen as
+  # match targets).  Additionally *one* step would be required to remove the
+  # letter 'x' from the string entirely.
   def smart_reduction_count_process(string)
+    # e.g { a: 3, b: 2, c: 2, x: 1 }
     character_by_frequency_hash = construct_frequency_analysis_hash(string)
 
-    # A match_target is a letter that is chosen to as a target value to
-    # decrement the frequency of letters of a greater frequency and eleminate
-    # any letters with a lesser frequency.
-    # for each letter
     n_removals_per_potential_match_target = character_by_frequency_hash.map do |k_v|
-      this_letter, this_count = k_v
+      this_letter = LetterOfS.new(k_v) # this_letter, this_count = k_v
 
-      # find the cost to eliminate all letters with a smaller frequency than
-      # this_letter
-      # plus the cost to reduce all letters with a greater frequency to that of
-      # this_letter
-
-      # find_n_removals_to_match_to_this_letter_and_eliminate_any_less_frequent
-      # for each of it's neighboring letters
-      character_by_frequency_hash.map do |other_letter_pair|
-        next if other_letter_pair[0] == this_letter
-        other_letter_count = other_letter_pair[1]
-
-        # if the other letter's count is bigger than this letter's count, we need
-        # to count it downwards to this letter's count
-        if other_letter_count >= this_count
-          other_letter_count - this_count
-        else
-          # otherwise we count the other letter's count down to zero ><
-          other_letter_count
-        end
-      end.compact.inject(&:+)
+      determine_number_of_removes_given_match_target(this_letter, character_by_frequency_hash)
     end.compact.sort
 
     minimal_number_of_removals = n_removals_per_potential_match_target.first
   end
 
+  # Returns the number of removals required to eliminate all letters with a
+  # smaller frequency than match_letter, plus the cost to reduce all letters
+  # with a greater frequency than that of match_letter to be equal to the
+  # match_letter's frequency
+  def determine_number_of_removes_given_match_target(match_letter, character_by_frequency_hash)
+    # for each of it's neighboring letters
+    character_by_frequency_hash.map do |other_letter_pair|
+      # FIXME: ask if there's a cooler way to do this... I bet there is...
+      other_letter = LetterOfS.new(other_letter_pair)
+      next if other_letter.char == match_letter.char # skip over itself
+
+      # If the other letter's frequency is greater than the match_letter's
+      # count, then we need to count it downwards to the match_letter's count
+      if other_letter.count >= match_letter.count
+        other_letter.count - match_letter.count
+      # Otherwise we count the other letter's frequency down to zero ><
+      else
+        other_letter.count
+      end
+
+    end.compact.inject(&:+)
+  end
+
+end
+
+# This simple class is for working with Letters in strings to make them valid
+# (S) strings.
+class LetterOfS
+  attr_reader :char, :count
+
+  def initialize(k_v)
+    @char, @count = k_v
+  end
 end
 
 
@@ -151,13 +149,7 @@ if watsons_string.nil? or watsons_string.lines.nil? or watsons_string.lines.firs
 else
   watsons_string = watsons_string.lines.first.chomp
 end
-# watsons_string = watsons_string.lines.first.chomp unless watsons_string.lines.first.nil?
 
-# watsons_string = "aaaaabbbbckk"
-
-# The below string has 1 flake (it's 'x').
-# A flake is a character that is easier to completely remove than it is to
-# decrement the occurences of all other characters more frequent than said flake
 #
 # Given a frequency analysis, we'll see that...
 f = {
@@ -175,9 +167,7 @@ f = {
 # y and 0,
 # where x is the large number, and y is the other number
 
-# watsons_string = "aabbccddx"
 
 ben = ContractorToSherlock.new
-
 
 puts ben.validate_string_for_sherlock(watsons_string)
