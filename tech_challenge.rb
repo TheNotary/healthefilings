@@ -1,5 +1,3 @@
-require 'pry'
-
 # lib/sherlock_and_valid_string/string_corrector.rb
 
 # This module contains methods related to making invalid strings valid
@@ -28,7 +26,7 @@ module StringCorrector
   #   - if the string contains anything other than the lower case characters a-z
   def ensure_string_is_solvable!(string)
     character_validation_pattern = /^[a-z]+$/
-    if string.length <= 1
+    if string.length < 1
       raise "ERROR: the string is less than or equal to 1 character"
     elsif string.length > 100_000 # 10**5
       raise "ERROR: the string is too large"
@@ -123,6 +121,7 @@ class ContractorToSherlock
     # it is to solve the (S) for a string given to him by Watson.
   def validate_string_for_sherlock(string)
     ensure_string_is_solvable!(string)
+    return "YES" if string.length == 1
 
     if solvable_in_one_removal?(string)
       "YES"
@@ -147,8 +146,12 @@ end
 
 # gets the first line from stdin
 watsons_string = ARGF.read # .lines.first.chomp
-raise 'hell' if watsons_string.lines.first.nil?
-watsons_string = watsons_string.lines.first.chomp unless watsons_string.lines.first.nil?
+if watsons_string.nil? or watsons_string.lines.nil? or watsons_string.lines.first.nil?
+  watsons_string = ""
+else
+  watsons_string = watsons_string.lines.first.chomp
+end
+# watsons_string = watsons_string.lines.first.chomp unless watsons_string.lines.first.nil?
 
 # watsons_string = "aaaaabbbbckk"
 
@@ -174,7 +177,7 @@ f = {
 
 # watsons_string = "aabbccddx"
 
-
 ben = ContractorToSherlock.new
+
 
 puts ben.validate_string_for_sherlock(watsons_string)
