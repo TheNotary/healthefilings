@@ -9,7 +9,7 @@ module StringCorrector
 
   # Ignore me, I'm some of Sherlock's code
   # takes in a string an corrects it such that each distinct
-  # character occurse exactly as often as each other, eg "aabbc"
+  # character occurs exactly as often as each other, eg "aabbc"
   # becomes
   def correct_string(string)
     raise "Not Implemented!"
@@ -71,13 +71,13 @@ module StringCorrector
   def deduce_number_of_removals_required_to_correct_a_string(string)
     character_by_frequency_hash = construct_frequency_analysis_hash(string)
 
-    most_infrequent_count = character_by_frequency_hash.values.sort.uniq.first
+    most_infrequent_letter_count = character_by_frequency_hash.values.sort.uniq.first
 
     character_by_frequency_hash.inject(0) do |total_removals_required, k_v|
       letter, count = k_v
 
-      if count > most_infrequent_count
-        total_removals_required += (count - most_infrequent_count)
+      if count > most_infrequent_letter_count
+        total_removals_required += (count - most_infrequent_letter_count)
       else
         total_removals_required
       end
@@ -130,13 +130,14 @@ class ContractorToSherlock
     end
 end
 
+# gets the first line from stdin
+watsons_string = ARGF.read.lines.first.chomp
+
+binding.pry
 
 # Sherlock needs a 3rd party contractor to answer some questions
 # about a strings that watson gives to him.
 ben = ContractorToSherlock.new
-
-# watsons_string = "aabbc"
-watsons_string = ARGF.read
 
 puts ben.validate_string_for_sherlock(watsons_string)
 
