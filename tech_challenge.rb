@@ -24,16 +24,17 @@ module StringCorrector
     end
   end
 
-  # Returns a hash depicting the frequencey of occurance for each distinct
-  # character in the string.  Consider this function to return...
+  # Returns an array of LetterOfS objects which depict the frequencey of
+  # occurance for each distinct character in the string.
+  # Consider this function to return
   #
   #         [ LetterOfS(["a", 3]),
   #           LetterOfS(["b", 2]),
   #           LetterOfS(["c", 2]),
   #           LetterOfS(["x", 1]) ]
   #
-  # When given a string of "aaabbccx".
-  def construct_frequency_analysis_hash(string)
+  # when given a string of "aaabbccx".
+  def construct_frequency_analysis_array(string)
     string.split("").each_with_object(Hash.new(0)) do |letter, hash|
       hash[letter] += 1 # increment frequency count for this letter
     end.map {|h| LetterOfS.new(h) }
@@ -67,10 +68,10 @@ module StringCorrector
   # match targets).  Additionally *one* step would be required to remove the
   # letter 'x' from the string entirely.
   def smart_reduction_count_process(string)
-    @character_by_frequency_hash = construct_frequency_analysis_hash(string)
+    @character_by_frequency_array = construct_frequency_analysis_array(string)
 
     n_removals_of_each_potential_match_target =
-      @character_by_frequency_hash.map do |match_target|
+      @character_by_frequency_array.map do |match_target|
         determine_number_of_removals_given_match_target(match_target)
       end.compact
 
@@ -85,7 +86,7 @@ module StringCorrector
   def determine_number_of_removals_given_match_target(match_target)
 
     # for each neighboring letter of match_target
-    @character_by_frequency_hash.map do |other_letter|
+    @character_by_frequency_array.map do |other_letter|
       next if other_letter.char == match_target.char # skip over itself
 
       # If the other letter's frequency is greater than the match_letter's
@@ -123,7 +124,7 @@ class ContractorToSherlock
 
   # Sherlock will want the result of this method to determine how many steps are
   # required to reach a string of (S) given a string from Watson.
-  def validate_string_for_sherlock(string)
+  def check_string_for_sherlock(string)
     ensure_string_is_solvable!(string)
     return "YES" if string.length == 1
 
@@ -137,7 +138,7 @@ class ContractorToSherlock
 
   private
     # meta-notes: I gave this it's own function to hide the conditional check
-    # which so the top-most algo looks absolutely crystal clear.
+    # so that the top-most algo looks absolutely crystal clear.
     def solvable_in_one_removal?(string)
       if deduce_number_of_removals_required_to_correct_a_string(string) <= 1
         true
@@ -154,4 +155,4 @@ watsons_string = ARGF.read.lines.first.chomp
 
 ben = ContractorToSherlock.new
 
-puts ben.validate_string_for_sherlock(watsons_string)
+puts ben.check_string_for_sherlock(watsons_string)
