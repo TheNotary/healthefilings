@@ -1,14 +1,16 @@
+require 'pry'
+
 # lib/sherlock_and_valid_string/string_corrector.rb
 
-# This module contains methods related to making invalid strings valid
-# (with regard to the solving (S) for a given string as documented in the
+# The StringCorrector module contains methods related to making invalid strings
+# valid (with regard to the solving (S) for a given string as documented in the
 # hypothetical README.md that would exist for an important production grade
-# codebase)
+# codebase).
 module StringCorrector
 
   # Raises an exception if the string does not meet the minimum criteria to be
   # solved, e.g.
-  #   - if the string is less than or equal to 1 character, or
+  #   - if the string is less than 1 character, or
   #   - if the string is greater than 10**5
   #   - if the string contains anything other than the lower case characters a-z
   def ensure_string_is_solvable!(string)
@@ -23,17 +25,23 @@ module StringCorrector
   end
 
   # Returns a hash depicting the frequencey of occurance for each distinct
-  # character in the string
+  # character in the string.  Consider this function to return...
+  #
+  #         [ LetterOfS(["a", 3]),
+  #           LetterOfS(["b", 2]),
+  #           LetterOfS(["c", 2]),
+  #           LetterOfS(["x", 1]) ]
+  #
+  # When given a string of "aaabbccx".
   def construct_frequency_analysis_hash(string)
     string.split("").each_with_object(Hash.new(0)) do |letter, hash|
       hash[letter] += 1 # increment frequency count for this letter
-    end
+    end.map {|h| LetterOfS.new(h) }
   end
 
   # Returns the count of characters that need to be removed from the string
   # to make it valid with regard to (S).
   def deduce_number_of_removals_required_to_correct_a_string(string)
-    # reduction_by_greatest_frequenters(string)
     smart_reduction_count_process(string)
   end
 
@@ -59,39 +67,37 @@ module StringCorrector
   # match targets).  Additionally *one* step would be required to remove the
   # letter 'x' from the string entirely.
   def smart_reduction_count_process(string)
-    # e.g { a: 3, b: 2, c: 2, x: 1 }
-    character_by_frequency_hash = construct_frequency_analysis_hash(string)
+    @character_by_frequency_hash = construct_frequency_analysis_hash(string)
 
-    n_removals_per_potential_match_target = character_by_frequency_hash.map do |k_v|
-      this_letter = LetterOfS.new(k_v) # this_letter, this_count = k_v
+    n_removals_of_each_potential_match_target =
+      @character_by_frequency_hash.map do |match_target|
+        determine_number_of_removals_given_match_target(match_target)
+      end.compact
 
-      determine_number_of_removes_given_match_target(this_letter, character_by_frequency_hash)
-    end.compact.sort
-
-    minimal_number_of_removals = n_removals_per_potential_match_target.first
+    # pick that of the least number of removals
+    minimal_number_of_removals = n_removals_of_each_potential_match_target.sort.first
   end
 
   # Returns the number of removals required to eliminate all letters with a
-  # smaller frequency than match_letter, plus the cost to reduce all letters
-  # with a greater frequency than that of match_letter to be equal to the
-  # match_letter's frequency
-  def determine_number_of_removes_given_match_target(match_letter, character_by_frequency_hash)
-    # for each of it's neighboring letters
-    character_by_frequency_hash.map do |other_letter_pair|
-      # FIXME: ask if there's a cooler way to do this... I bet there is...
-      other_letter = LetterOfS.new(other_letter_pair)
-      next if other_letter.char == match_letter.char # skip over itself
+  # smaller frequency than match_target, plus the cost to reduce all letters
+  # with a greater frequency than that of match_target to be equal to the
+  # match_target's frequency.
+  def determine_number_of_removals_given_match_target(match_target)
+
+    # for each neighboring letter of match_target
+    @character_by_frequency_hash.map do |other_letter|
+      next if other_letter.char == match_target.char # skip over itself
 
       # If the other letter's frequency is greater than the match_letter's
-      # count, then we need to count it downwards to the match_letter's count
-      if other_letter.count >= match_letter.count
-        other_letter.count - match_letter.count
+      # count, then we need to count it downwards to the match_target's count
+      if other_letter.count >= match_target.count
+        other_letter.count - match_target.count
       # Otherwise we count the other letter's frequency down to zero ><
       else
         other_letter.count
       end
 
-    end.compact.inject(&:+)
+    end.compact.reduce(:+)
   end
 
 end
@@ -107,16 +113,16 @@ class LetterOfS
 end
 
 
+
 # lib/sherlock_and_valid_string/contractor_to_sherlock.rb
 
 # Sherlock needs a 3rd party contractor to answer some questions
 # about a strings that watson gives to him.
 class ContractorToSherlock
-
   include StringCorrector
 
-  # Sherlock will want the result of this method to determine how 'easy'
-    # it is to solve the (S) for a string given to him by Watson.
+  # Sherlock will want the result of this method to determine how many steps are
+  # required to reach a string of (S) given a string from Watson.
   def validate_string_for_sherlock(string)
     ensure_string_is_solvable!(string)
     return "YES" if string.length == 1
@@ -142,31 +148,9 @@ class ContractorToSherlock
 end
 
 
+
 # gets the first line from stdin
-watsons_string = ARGF.read # .lines.first.chomp
-if watsons_string.nil? or watsons_string.lines.nil? or watsons_string.lines.first.nil?
-  watsons_string = ""
-else
-  watsons_string = watsons_string.lines.first.chomp
-end
-
-#
-# Given a frequency analysis, we'll see that...
-f = {
-      a: 203,
-      b: 202,
-      c: 201,
-      x: 2,
-      y: 2,
-      z: 1
-    }
-# because a is so massive, all the other letters are flakes.
-# To determine flakeyness, iterate over each number (especially the largest)
-# and count the difference between:
-# x and y and
-# y and 0,
-# where x is the large number, and y is the other number
-
+watsons_string = ARGF.read.lines.first.chomp
 
 ben = ContractorToSherlock.new
 
