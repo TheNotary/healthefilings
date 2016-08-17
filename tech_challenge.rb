@@ -2,13 +2,6 @@
 
 module StringCorrector
 
-  # Raises exception if intput not valid
-  def self.ensure_string_is_solvable!(string)
-    if string.length < 1 or string.length > 100_000 or (string =~ /^[a-z]+$/).nil?
-      raise "Can't Continue Processing this string due to nature of input"
-    end
-  end
-
   def self.deduce_number_of_removals_required_to_correct_a_string(string)
     StringCorrector.ensure_string_is_solvable!(string)
 
@@ -43,6 +36,13 @@ module StringCorrector
         hash[character] ||= LetterOfS.new(character, 0)
         hash[character].increment # increment frequency count for this character
       end.values
+    end
+
+    # Raises exception if intput not valid
+    def self.ensure_string_is_solvable!(string)
+      if string.length < 1 or string.length > 100_000 or (string =~ /^[a-z]+$/).nil?
+        raise "Can't Continue Processing this string due to nature of input"
+      end
     end
 
     class LetterOfS
