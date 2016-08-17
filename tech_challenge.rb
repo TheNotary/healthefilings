@@ -2,17 +2,10 @@
 
 module StringCorrector
 
-  class InvalidInputs < RuntimeError; end
-
   # Raises exception if intput not valid
   def self.ensure_string_is_solvable!(string)
-    character_validation_pattern = /^[a-z]+$/
-    if string.length < 1
-      raise InvalidInputs, "The input string is less than or equal to 1 character.  Input: #{string}"
-    elsif string.length > 100_000 # 10**5
-      raise InvalidInputs, "The input string is too large.  Input: #{string}"
-    elsif (string =~ character_validation_pattern).nil?
-      raise InvalidInputs, "The input string contained characters other than those [a-z].  Input: #{string}"
+    if string.length < 1 or string.length > 100_000 or (string =~ /^[a-z]+$/).nil?
+      raise "Can't Continue Processing this string due to nature of input"
     end
   end
 
@@ -73,8 +66,6 @@ end
 
 
 
-
-
 # gets the first line from stdin
 watsons_string = ARGF.read.lines.first.chomp
 
@@ -85,5 +76,5 @@ begin
     puts "NO"
   end
 rescue
-  puts "YES" # hack for bypassing but on hackerrank.com
+  puts "YES" # hack for bypassing bug on hackerrank.com
 end
